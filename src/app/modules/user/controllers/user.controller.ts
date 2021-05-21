@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
+import { ErrorType } from 'src/app/core/enums/error-type.enum';
 import { checkResult } from 'src/app/core/helpers/check-result';
 import { ResponseHelper } from 'src/app/core/helpers/response.helper';
 import { UserType } from '../enums/user-type.enum';
@@ -50,7 +51,7 @@ export class UserController {
     async create(@Req() request, @Res() response, @Body() user:User){
 
         const createdUser = await this.userService.create(user);
-        checkResult<User>(createdUser,'ERRORS.USER_CREATE')
+        checkResult<User>(createdUser,400,ErrorType.UNEXPECTED)
 
         response.json(this.resHelper.set(
             200,
@@ -68,7 +69,7 @@ export class UserController {
 
         const updatedUser = await this.userService.updateUser({_id:userId},user)
 
-        checkResult<User>(updatedUser,'ERRORS.USER_UPDATE');//sonucu kontrol ediyor
+        checkResult<User>(updatedUser,400,ErrorType.USER_NOT_FOUND);//sonucu kontrol ediyor
 
         response.json(this.resHelper.set(
             200,
@@ -104,7 +105,7 @@ export class UserController {
 
         const foundUser = await this.userService.findById(userId);
 
-        checkResult<User>(foundUser,'ERRORS.USER_NOT_FOUND');
+        checkResult<User>(foundUser,400,ErrorType.USER_NOT_FOUND);
 
         response.json(this.resHelper.set(
             200,

@@ -131,6 +131,7 @@ export class UserService {
 
     }   
 
+    //parametre olarak gonderilen userNameden zaten varsa error firlatiyor
     private async checkUserNameUnique(userName : string){
         let user = await this.userModel.findOne({userName: userName});
         if(user) throw new BaseError(400,ErrorType.THIS_USER_NAME_IS_TAKEN)

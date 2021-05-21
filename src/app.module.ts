@@ -1,3 +1,4 @@
+import { AuthModule } from './app/modules/auth/auth.module';
 import { UserModule } from './app/modules/user/user.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -9,6 +10,7 @@ const ENV = process.env.MODE;
 
 @Module({
   imports: [
+    AuthModule,
     UserModule,
     ConfigModule.forRoot({
       envFilePath: !ENV
