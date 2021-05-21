@@ -19,8 +19,12 @@ export class LogHelper {
 
     public logError(logMessage : string){
         log4js.getLogger("LOG").error(logMessage);
+        
     }
 
+    public logTrace(logMessage:string){
+        log4js.getLogger("LOG").trace(logMessage);
+    }
 
 
 }

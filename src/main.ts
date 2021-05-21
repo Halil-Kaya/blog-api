@@ -2,8 +2,15 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './app/core/filters/all-exception.filter';
+import { LogHelper } from './app/core/helpers/logger.helper';
+
+
 
 async function bootstrap() {
+
+  const logHelper = new LogHelper()
+
+
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
@@ -22,6 +29,9 @@ async function bootstrap() {
   await app.listen(config.get<number>('PORT'))
   
   console.log(`Server is up on ${ await app.getUrl() } `);
+
+  //serverin baslatildigini logluyorum
+  logHelper.logTrace(`Server is up on ${ config.get<number>('PORT') } port`)
 
 
 }

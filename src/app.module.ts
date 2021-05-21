@@ -1,3 +1,4 @@
+import { UserModule } from './app/modules/user/user.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -8,6 +9,7 @@ const ENV = process.env.MODE;
 
 @Module({
   imports: [
+    UserModule,
     ConfigModule.forRoot({
       envFilePath: !ENV
         ? './src/environments/.env'

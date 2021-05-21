@@ -13,12 +13,15 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const response = ctx.getResponse();
       const request = ctx.getRequest();
 
-      const status = (exception instanceof HttpException) ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+      let status = (exception instanceof HttpException) ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR
+      status = (exception instanceof BaseError) ? exception.status : status;
 
-      const message = (exception instanceof Error) ? exception.message : exception.response.error;
+      let message = (exception instanceof Error) ? exception.message : exception.response.error;
 
-      const innerException = (exception instanceof BaseError) ? (exception.innerException ?? null) : null; 
+      let innerException = (exception instanceof BaseError) ? (exception.innerException ?? null) : null; 
       
+
+
       this.logger.error(`[ERROR:${ status }] ${ message.toUpperCase()}`,exception.stack);
 
       response.status(status)
