@@ -7,14 +7,18 @@ import * as $$       from 'lodash';
 import { UserType } from '../enums/user-type.enum';
 import { ErrorType } from 'src/app/core/enums/error-type.enum';
 import * as bcrypt from 'bcrypt';
+import { MovementHistoryService } from '../../movement-history/services/movement-history.service';
+import { checkResult } from 'src/app/core/helpers/check-result';
+import { MovementType } from '../../movement-history/enums/movement.enum';
 
 
 @Injectable()
 export class UserService {
 
-
-    constructor(@InjectModel(User.name) private readonly userModel : Model<User>){}
-
+    constructor(
+        @InjectModel(User.name) private readonly userModel : Model<User>,
+        private readonly movementHistoryService : MovementHistoryService
+    ){}
 
     public async create(user:User) : Promise<User>{
         
@@ -28,11 +32,15 @@ export class UserService {
         delete user.registeredAt;
 
         let newUser = new this.userModel(user);
-        return await newUser.save()
-    }
+        const createdUser = await newUser.save()
 
-    public async findAll() : Promise<User[]>{
-        return await this.userModel.find()
+        //kullanici olusmus mu diye kontrol ediyorum
+        checkResult<User>(createdUser,400,ErrorType.UNEXPECTED)
+
+        //haraket gecmisini ekliyorum
+        await this.addMovementHistoryToUser(createdUser._id,MovementType.USER_CREATED)
+
+        return createdUser
     }
 
     public async findById(id:string) : Promise<User>{
@@ -45,7 +53,9 @@ export class UserService {
             .findOne(query)
     }
 
-    public async updateUserName(query : FilterQuery<User>,newUserName : string){
+    public async updateUserName(query : FilterQuery<User>,newUserName : string) : Promise<boolean>{
+
+        if(!newUserName) throw new BaseError(400,ErrorType.NOT_VALID_USER_NAME)
 
         if(query._id){//string olarak gonderilen id yi object id ye donusturuyor
             query._id = Types.ObjectId(query._id);
@@ -61,26 +71,42 @@ export class UserService {
         const matchedUser = await this.userModel
                 .findOne({_id: { $ne : query._id}, userName : newUserName})
         
-        if(matchedUser) throw new BaseError(400,ErrorType.THIS_USER_NAME_IS_TAKEN)
+        if(matchedUser){
+
+            //haraket gecmisini ekliyorum
+            await this.addMovementHistoryToUser(user._id,MovementType.FAIL_USERNAME_UPDATE)
+
+            //kullanici adi alindigi icin error firlatiyorum
+            throw new BaseError(400,ErrorType.THIS_USER_NAME_IS_TAKEN)
+
+        } 
 
         user.userName = newUserName
 
-        return await this.userModel
+        const updatedUser = await this.userModel
             .findOneAndUpdate(
                 {...query},
                 { ...user},
                 { new : true }
             )
-
+        
+        
+        checkResult<User>(updatedUser,400,ErrorType.UNEXPECTED)
+        
+        //haraket gecmisini ekliyorum
+        await this.addMovementHistoryToUser(updatedUser._id,MovementType.SUCCESS_USERNAME_UPDATE)
+            
+        return true
     }
 
-    public async updatePassword(query : FilterQuery<User>,oldPassword,newPassword){
+    public async updatePassword(query : FilterQuery<User>,oldPassword,newPassword) : Promise<boolean>{
 
         //yeni sifreyi kontrol ediyorum
         if(!newPassword) throw new BaseError(400,ErrorType.NOT_VALID_PASSWORD_TYPE)
 
-        if(newPassword.length < 6) throw new BaseError(400,ErrorType.SHORT_PASSWORD)
-
+        if(newPassword.length < 6) {
+            throw new BaseError(400,ErrorType.SHORT_PASSWORD)
+        }
 
         if(query._id){//string olarak gonderilen id yi object id ye donusturuyor
             query._id = Types.ObjectId(query._id);
@@ -92,19 +118,31 @@ export class UserService {
         if(!user) throw new BaseError(400,ErrorType.USER_NOT_FOUND)
 
         //kullanicinin sifresi yanlissa eror firlatiyorum
-        if(!(await user.validatePassword(oldPassword))) throw new BaseError(400,ErrorType.WRONG_PASSWORD)
+        if(!(await user.validatePassword(oldPassword))){
+
+            //haraket gecmisini ekliyorum
+            await this.addMovementHistoryToUser(user._id,MovementType.FAIL_PASSWORD_UPDATE)
+
+            throw new BaseError(400,ErrorType.WRONG_PASSWORD)
+        } 
 
         const hashedNewPassword = await this.hashGivenPassword(newPassword);
 
         user.password = hashedNewPassword;
 
-        return await this.userModel
+        const updatedUser = await this.userModel
         .findOneAndUpdate(
             {...query},
             { ...user},
             { new : true }
         )
 
+        checkResult<User>(updatedUser,400,ErrorType.UNEXPECTED)
+        
+        await this.addMovementHistoryToUser(updatedUser._id,MovementType.SUCCESS_PASSWORD_UPDATE)
+        
+
+        return true
     }
 
 
@@ -114,22 +152,42 @@ export class UserService {
             query._id = Types.ObjectId(query._id);
         }
 
+        //boyle bir kullanici var mi diye kontrol ediyorum
+        const realUser = await this.userModel.findById({_id : query._id})
+        checkResult<User>(realUser,400,ErrorType.USER_NOT_FOUND)
+
         //kullanici adini, sifresini ve olusturulma tarihini guncellemesini engelliyor
         delete user.userName;
         delete user.password;
         delete user.registeredAt;
 
-        //userType i kontrol ediyor tanimlanan userType disinda userType girmisse error firlatiyor
-        this.isMatchingUserType(user.userType)
+        //userType i kontrol ediyor tanimlanan userType ('standart','premium') disinda userType girmisse error firlatiyor
+        if(!this.isMatchingUserType(user.userType)){
 
-        return await this.userModel
+            await this.addMovementHistoryToUser(realUser._id,MovementType.FAIL_UPDATE)
+
+            throw new BaseError(400,ErrorType.USER_TYPE_IS_NOT_A_VALID_VALUE)
+        }
+
+        const updatedUser  = await this.userModel
             .findOneAndUpdate(
                 {...query },
                 { ...user },
                 { new : true }
             )
 
+        checkResult<User>(updatedUser,400,ErrorType.UNEXPECTED)
+        
+        await this.addMovementHistoryToUser(updatedUser._id,MovementType.SUCCESSFUL_UPDATE)
+                
+        return updatedUser
+
     }   
+
+    //kullanicinin haraket gecmisine olayi ekliyorum
+    private async addMovementHistoryToUser(userId: string,movementType : MovementType){
+        await this.movementHistoryService.create(userId,movementType)
+    }
 
     //parametre olarak gonderilen userNameden zaten varsa error firlatiyor
     private async checkUserNameUnique(userName : string){
@@ -154,11 +212,12 @@ export class UserService {
             }
         }
 
-        if(matching == false) throw new BaseError(400,ErrorType.USER_TYPE_IS_NOT_A_VALID_VALUE)
+        return matching
     }
 
     private async hashGivenPassword(password : string) : Promise<string> {
         return await bcrypt.hash(password, 12);
     }
+
 
 }

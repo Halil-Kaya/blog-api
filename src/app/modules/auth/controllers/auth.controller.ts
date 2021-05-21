@@ -56,4 +56,22 @@ export class AuthController {
 
     }
 
+
+    // @Post('create')
+    // async create(@Req() request, @Res() response, @Body() user:User){
+
+    //     const createdUser = await this.userService.create(user);
+    //     checkResult<User>(createdUser,400,ErrorType.UNEXPECTED)
+
+    //     response.json(this.resHelper.set(
+    //         200,
+    //         {
+    //             user : createdUser,
+    //             controller : this.controller,
+    //             params : request.params,
+    //             headers : request.headers,
+    //         }
+    //     ))
+    // }
+
 }

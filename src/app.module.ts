@@ -1,3 +1,4 @@
+import { MovementHistoryModule } from './app/modules/movement-history/movement-history.module';
 import { AuthModule } from './app/modules/auth/auth.module';
 import { UserModule } from './app/modules/user/user.module';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
@@ -10,6 +11,7 @@ const ENV = process.env.MODE;
 
 @Module({
   imports: [
+    MovementHistoryModule,
     AuthModule,
     UserModule,
     ConfigModule.forRoot({
