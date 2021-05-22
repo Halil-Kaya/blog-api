@@ -184,8 +184,9 @@ export class UserService {
 
     }   
 
+
     //kullanicinin haraket gecmisine olayi ekliyorum
-    private async addMovementHistoryToUser(userId: string,movementType : MovementType){
+    public async addMovementHistoryToUser(userId: string,movementType : MovementType){
         await this.movementHistoryService.create(userId,movementType)
     }
 

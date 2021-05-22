@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy }         from 'passport-local';
 import { ErrorType } from "src/app/core/enums/error-type.enum";
 import { BaseError } from "src/app/core/errors/base.error";
+import { MovementType } from "../../movement-history/enums/movement.enum";
 import { AuthService } from "../services/auth.service";
 
 @Injectable()
@@ -29,8 +30,11 @@ export class PassportLocalGuard extends PassportStrategy(Strategy,'local') {
             .then(signedUser => {
 
                 if(signedUser){
+                    
                     done(null,signedUser.toObject());
+                
                 }else{
+
                     throw new BaseError(401,ErrorType.UNAUTHORIZED)
                 }
             })

@@ -27,11 +27,11 @@ export class UserController {
 	 @body User
 	 @response updated user
 	********************************************************/
-    @Post('update/:id')
+    @Post('update')
     @UseGuards(AuthGuard('jwt'))
-    async update(@Req() request,@Res() response,@Param('id') userId:string, @Body() user : User){
+    async update(@Req() request,@Res() response, @Body() user : User){
 
-        const updatedUser = await this.userService.updateUser({_id:userId},user)
+        const updatedUser = await this.userService.updateUser({_id:request.user._id},user)
 
         checkResult<User>(updatedUser,400,ErrorType.USER_NOT_FOUND);//sonucu kontrol ediyor
 

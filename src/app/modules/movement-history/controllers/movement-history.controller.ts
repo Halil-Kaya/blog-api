@@ -18,9 +18,9 @@ export class MovementHistoryController {
 
     /********************************************************
 	 @method GET
-	 @url /movement-history/
+	 @url /movement-history
 	 @params JWToken
-	 @response UserMovementHistoryDto
+	 @response user and user's movement history
 	********************************************************/
     @Get()
     @UseGuards(AuthGuard('jwt'))
