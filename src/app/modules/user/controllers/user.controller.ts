@@ -4,12 +4,10 @@ import { request } from 'express';
 import { ErrorType } from 'src/app/core/enums/error-type.enum';
 import { checkResult } from 'src/app/core/helpers/check-result';
 import { ResponseHelper } from 'src/app/core/helpers/response.helper';
-import { UpdatePasswordDto } from '../dtos/update-password.dto';
 import { UserType } from '../enums/user-type.enum';
 import { User, UserSchema } from '../models/user';
 import { UserService } from '../services/user.service';
 import * as $$       from 'lodash';
-import { JwtHelper } from '../../auth/helpers/jwt.helper';
 
 
 @Controller('user')
@@ -19,105 +17,8 @@ export class UserController {
     private resHelper = new ResponseHelper();
 
     constructor(
-        private readonly userService : UserService,
-        private readonly jwtHelper: JwtHelper
+        private readonly userService : UserService
     ) {}
-
-
-    /********************************************************
-	 @method POST
-	 @url /user/create
-	 @body User
-	 @response user & token
-	********************************************************/
-    @Post('create')
-    async create(@Req() request, @Res() response, @Body() user:User){
-
-        const createdUser = await this.userService.create(user);
-        checkResult<User>(createdUser,400,ErrorType.UNEXPECTED)
-
-        const token = this.jwtHelper.signSanitizedUser(createdUser);
-
-        response.json(this.resHelper.set(
-            200,
-            {
-                token,
-                ...$$.pick(createdUser,[
-                    '_id',
-                    'userName',
-                    'userType',
-                    'registeredAt'
-                ])
-            },
-            {
-                controller : this.controller,
-                params : request.params,
-                headers : request.headers,
-            }
-        ))
-    }
-
-
-    /********************************************************
-	 @method POST
-	 @url /user/update-password
-	 @params JWToken
-	 @body UpdatePasswordDto
-	 @response true-false & token
-	********************************************************/
-    @Post('update-password')
-    @UseGuards(AuthGuard('jwt'))
-    async updatePassword(@Res() response,@Req() request,@Body() updatePasswordDto : UpdatePasswordDto){
-
-        const result = await this.userService.updatePassword( 
-            {_id:request.user._id},
-            updatePasswordDto.oldPassword,
-            updatePasswordDto.newPassword
-            )
-
-        const token = this.jwtHelper.signSanitizedUser(request.user);
-
-        return response
-            .json(this.resHelper.set(
-                200,
-                {
-                    token,
-                    result
-                },
-                {
-                    controller: this.controller,
-                    params    : request.params,
-                    headers   : request.headers
-                }
-            ))
-    }
-
-    /********************************************************
-	 @method POST
-	 @url /user/update-userName
-	 @params JWToken
-	 @body {newUserName}
-	 @response true-false
-	********************************************************/
-    @Post('update-userName')
-    @UseGuards(AuthGuard('jwt'))
-    async test(@Res() response,@Req() request, @Body('newUserName') newUserName:string,){
-
-
-        const result = await this.userService.updateUserName({_id:request.user._id},newUserName)
-
-        return response
-            .json(this.resHelper.set(
-                200,
-                result,
-                {
-                    controller: this.controller,
-                    params    : request.params,
-                    headers   : request.headers
-                }
-            ))
-
-    }
 
     /********************************************************
 	 @method POST
@@ -136,7 +37,14 @@ export class UserController {
 
         response.json(this.resHelper.set(
             200,
-            updatedUser,
+            {
+                ...$$.pick(updatedUser,[
+                    '_id',
+                    'userName',
+                    'userType',
+                    'registeredAt'
+                ])
+            },
             {
                 controller: this.controller,
                 params :  request.params,
@@ -147,11 +55,11 @@ export class UserController {
 
     /********************************************************
 	 @method GET
-	 @url /user/update/:id
+	 @url /user/profile
 	 @params JWToken
-	 @response updated user
+	 @response user
 	********************************************************/
-    @Get(':id')
+    @Get('profile')
     @UseGuards(AuthGuard('jwt'))
     async getById(@Req() request, @Res() response){
 

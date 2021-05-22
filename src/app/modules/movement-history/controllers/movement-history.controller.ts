@@ -1,7 +1,10 @@
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { response } from 'express';
 import { ResponseHelper } from 'src/app/core/helpers/response.helper';
 import { MovementHistoryService } from '../services/movement-history.service';
+import * as $$       from 'lodash';
+import { UserMovementHistoryDto } from '../dto/user-movement.dto';
 
 @Controller('movement-history')
 export class MovementHistoryController {
@@ -13,25 +16,42 @@ export class MovementHistoryController {
         private readonly movementHistoryService : MovementHistoryService
     ) {}
 
+    /********************************************************
+	 @method GET
+	 @url /movement-history/
+	 @params JWToken
+	 @response UserMovementHistoryDto
+	********************************************************/
+    @Get()
+    @UseGuards(AuthGuard('jwt'))
+    async getByUserId(@Res() response,@Req() request){
 
-    @Post('create')
-    async create(@Res() response,@Body() data){
+        const result =  await this.movementHistoryService.getMovementHistoryOfUser(request.user._id)
+        
+        let userMovementHistoryDto = new UserMovementHistoryDto()
 
-        response.json(await this.movementHistoryService.create(data.id,data.type))
+        userMovementHistoryDto.user = $$.pick(request.user,[
+            '_id',
+            'userName',
+            'userType',
+            'registeredAt'
+        ])
+
+        userMovementHistoryDto.usersMovementHistory = result;
+
+        response.json(this.resHelper.set(
+            200,
+            {
+                ...userMovementHistoryDto
+            },
+            {
+                controller : this.controller,
+                params : request.params,
+                headers : request.headers
+            }
+        ))
+
     }
 
-
-    @Get('fetch')
-    async fetch(@Res() response){
-
-        response.json(await this.movementHistoryService.findAll())
-    }
-
-    @Get(':id')
-    async getByUserId(@Res() response,@Param('id') id){
-
-        response.json(await this.movementHistoryService.findAllByUserId(id))
-
-    }
 
 }

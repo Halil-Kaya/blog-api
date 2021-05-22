@@ -27,5 +27,6 @@ import { JwtHelper } from './helpers/jwt.helper';
       PassportLocalGuard,
       JwtHelper
     ],
+    exports : [JwtHelper]
 })
 export class AuthModule {}

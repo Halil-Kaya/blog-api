@@ -14,22 +14,8 @@ export class MovementHistoryService {
         return await movement.save()
     }
 
-    public async findAll() : Promise<MovementHistory[]>{
-        return await this.movementHistoryModel.find()
-    }
-
-    public async findById(id:string) : Promise<MovementHistory>{
-        return await this.movementHistoryModel
-            .findById(Types.ObjectId(id))
-    }
-
-    public async findOne(query: FilterQuery<MovementHistory>) : Promise<MovementHistory>{
-        return await this.movementHistoryModel
-            .findOne(query)
-    }
-
-    public async findAllByUserId(userId : string) : Promise<MovementHistory[]>{
-        return await this.movementHistoryModel.find({user : Types.ObjectId(userId)},{__v : 0 } )
+    public async getMovementHistoryOfUser(userId : string) : Promise<MovementHistory[]>{
+        return await this.movementHistoryModel.find({user : Types.ObjectId(userId)},{__v : 0,user : 0 } )
     }
 
 }

@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './models/user';
 import { MovementHistoryModule } from '../movement-history/movement-history.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
