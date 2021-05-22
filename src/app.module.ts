@@ -1,3 +1,5 @@
+import { TopicRegistrationModule } from './app/modules/topic-registration/topic-registration.module';
+import { TopicModule } from './app/modules/topic/topic.module';
 import { MovementHistoryModule } from './app/modules/movement-history/movement-history.module';
 import { AuthModule } from './app/modules/auth/auth.module';
 import { UserModule } from './app/modules/user/user.module';
@@ -11,6 +13,8 @@ const ENV = process.env.MODE;
 
 @Module({
   imports: [
+    TopicRegistrationModule,
+    TopicModule,
     MovementHistoryModule,
     AuthModule,
     UserModule,

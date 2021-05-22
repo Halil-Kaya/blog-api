@@ -29,7 +29,8 @@ export class JwtHelper{
         return this.sign(
             $$.pick(user,[ 
                 '_id',
-                'userName'
+                'userName',
+                'role'
             ])
         )
     }

@@ -22,7 +22,7 @@ export class UserController {
 
     /********************************************************
 	 @method POST
-	 @url /user/update/:id
+	 @url /user/update/
 	 @params JWToken
 	 @body User
 	 @response updated user

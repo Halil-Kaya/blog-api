@@ -2,6 +2,7 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { UserType } from '../enums/user-type.enum';
+import { RoleType } from 'src/app/core/enums/role.enum';
 
 @Schema()
 export class User extends Document{
@@ -23,6 +24,9 @@ export class User extends Document{
 
     @Prop({ type : Date,default: new Date(Date.now())})
     registeredAt: Date;
+
+    @Prop({type : String,enum : RoleType,default : RoleType.User})
+    role : string
 
     validatePassword : Function;
 
